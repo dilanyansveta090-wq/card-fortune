@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+<meta charset="UTF-8">
+<title>Թղթախաղի Գուշակություն</title>
+<style>
+body{
+  margin:0;
+  font-family:sans-serif;
+  background:radial-gradient(circle,#2b1055,#000);
+  color:#fff;
+}
+.container{max-width:1200px;margin:auto;padding:20px;text-align:center;}
+button{
+  padding:12px 20px;
+  border:none;
+  border-radius:25px;
+  margin:8px;
+  cursor:pointer;
+  background:linear-gradient(135deg,#f5c16c,#ff8c00);
+}
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(90px,1fr));
+  gap:10px;
+  margin-top:20px;
+}
+.card{
+  height:120px;
+  background:#8b0000;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+.card.open{
+  background:#fff;
+  color:#000;
+  flex-direction:column;
+  padding:5px;
+}
+input{
+  padding:10px;
+  border-radius:12px;
+  border:none;
+  margin:5px;
+}
+.result{
+  margin-top:20px;
+  padding:15px;
+  background:rgba(255,255,255,0.1);
+  border-radius:15px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+<h1>🃏 Թղթախաղի Գուշակություն</h1>
+
+<button onclick="manualMode()">📝 Իմ մոտից եմ գրում</button>
+<button onclick="spreadMode()">🃏 Կայքում եմ բացում</button>
+
+<div id="manual"></div>
+<div class="cards" id="cards"></div>
+<div class="result" id="finalResult"></div>
+</div>
+
+<script>
+// 🔮 Բոլոր 52 քարտերի նշանակությունները
+const meanings={
+"A♠":"Ուժեղ սկիզբ, լուրջ որոշում",
+"2♠":"Փոքր խոչընդոտ",
+"3♠":"Լարվածություն",
+"4♠":"Կանգ, դադար",
+"5♠":"Վեճ կամ պայքար",
+"6♠":"Ճանապարհ",
+"7♠":"Գաղտնիք",
+"8♠":"Սթրես",
+"9♠":"Հոգնածություն",
+"10♠":"Ծանր շրջան",
+"J♠":"Լուր",
+"Q♠":"Խելացի կին",
+"K♠":"Իշխանություն",
+
+"A♥":"Սեր, զգացմունք",
+"2♥":"Հարաբերություն",
+"3♥":"Ուրախություն",
+"4♥":"Անտարբերություն",
+"5♥":"Վիշտ",
+"6♥":"Անցյալի հիշողություն",
+"7♥":"Երազանք",
+"8♥":"Հեռացում",
+"9♥":"Երջանկություն",
+"10♥":"Ընտանեկան բարեկեցություն",
+"J♥":"Սիրահարված երիտասարդ",
+"Q♥":"Սիրող կին",
+"K♥":"Սիրող տղամարդ",
+
+"A♦":"Փող, հնարավորություն",
+"2♦":"Փոքր շահ",
+"3♦":"Աճ",
+"4♦":"Կայունություն",
+"5♦":"Ֆինանսական դժվարություն",
+"6♦":"Նվեր",
+"7♦":"Սպասում",
+"8♦":"Աշխատանք",
+"9♦":"Հաջողություն",
+"10♦":"Մեծ շահ",
+"J♦":"Առաջարկ",
+"Q♦":"Գործնական կին",
+"K♦":"Գործարար տղամարդ",
+
+"A♣":"Նոր գործ",
+"2♣":"Համագործակցություն",
+"3♣":"Առաջընթաց",
+"4♣":"Հաստատուն դիրք",
+"5♣":"Խնդիր",
+"6♣":"Օգնություն",
+"7♣":"Ռիսկ",
+"8♣":"Շարժում",
+"9♣":"Վստահություն",
+"10♣":"Հաջող ավարտ",
+"J♣":"Խելացի երիտասարդ",
+"Q♣":"Խորամանկ կին",
+"K♣":"Խելացի ղեկավար"
+};
+
+let chosen=[];
+
+// 📝 Ձեռքով գրելու ռեժիմ
+function manualMode(){
+  document.getElementById("cards").innerHTML="";
+  document.getElementById("finalResult").innerHTML="";
+  chosen=[];
+  let html="";
+  for(let i=0;i<7;i++){
+    html+=`<input placeholder="օր․ A♠ կամ 10♦" oninput="manualInput(this)">`;
+  }
+  document.getElementById("manual").innerHTML=html;
+}
+
+function manualInput(input){
+  const val=input.value.trim();
+  if(meanings[val] && !chosen.includes(val)){
+    chosen.push(val);
+  }
+  if(chosen.length===7) showFinal();
+}
+
+// 🃏 Փռված քարտերով ռեժիմ
+function spreadMode(){
+  document.getElementById("manual").innerHTML="";
+  document.getElementById("finalResult").innerHTML="";
+  chosen=[];
+  const suits=["♠","♥","♦","♣"];
+  const values=["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+  let deck=[];
+  suits.forEach(s=>values.forEach(v=>deck.push(v+s)));
+  deck.sort(()=>Math.random()-0.5);
+
+  const div=document.getElementById("cards");
+  div.innerHTML="";
+  deck.forEach(card=>{
+    const c=document.createElement("div");
+    c.className="card";
+    c.textContent="🂠";
+    c.onclick=()=>{
+      if(chosen.length>=7 || c.classList.contains("open"))return;
+      c.classList.add("open");
+      chosen.push(card);
+      c.innerHTML=`<strong>${card}</strong><small>${meanings[card]}</small>`;
+      if(chosen.length===7) showFinal();
+    };
+    div.appendChild(c);
+  });
+}
+
+// 🔮 Ընդհանուր գուշակություն
+function showFinal(){
+  let text="Ընդհանուր գուշակություն․ ";
+  if(chosen.some(c=>c.includes("♥"))) text+="Սիրո թեման կարևոր է։ ";
+  if(chosen.some(c=>c.includes("♦"))) text+="Ֆինանսական հարց կա։ ";
+  if(chosen.some(c=>c.includes("♠"))) text+="Կան լուրջ փորձություններ։ ";
+  if(chosen.some(c=>c.includes("♣"))) text+="Գործնական քայլեր են սպասվում։ ";
+
+  document.getElementById("finalResult").textContent=text;
+}
+</script>
+</body>
+</html>
